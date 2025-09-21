@@ -1,10 +1,10 @@
-#include "postgres.h"
+#include "pgvector.h"
+#include "hnsw.h"
 
 #include <math.h>
 
 #include "access/generic_xlog.h"
 #include "commands/vacuum.h"
-#include "hnsw.h"
 #include "storage/bufmgr.h"
 #include "storage/lmgr.h"
 #include "utils/memutils.h"

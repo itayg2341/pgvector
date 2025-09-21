@@ -1,4 +1,5 @@
-#include "postgres.h"
+#include "pgvector.h"
+#include "hnsw.h"
 
 #include <math.h>
 
@@ -6,10 +7,7 @@
 #include "catalog/pg_type.h"
 #include "catalog/pg_type_d.h"
 #include "common/hashfn.h"
-#include "fmgr.h"
-#include "hnsw.h"
 #include "lib/pairingheap.h"
-#include "sparsevec.h"
 #include "storage/bufmgr.h"
 #include "utils/datum.h"
 #include "utils/memdebug.h"
@@ -198,7 +196,7 @@ HnswInitPage(Buffer buf, Page page)
 HnswNeighborArray *
 HnswInitNeighborArray(int lm, HnswAllocator * allocator)
 {
-	HnswNeighborArray *a = HnswAlloc(allocator, HNSW_NEIGHBOR_ARRAY_SIZE(lm));
+	HnswNeighborArray *a = (HnswNeighborArray *) HnswAlloc(allocator, HNSW_NEIGHBOR_ARRAY_SIZE(lm));
 
 	a->length = 0;
 	a->closerSet = false;
@@ -238,7 +236,7 @@ HnswAlloc(HnswAllocator * allocator, Size size)
 HnswElement
 HnswInitElement(char *base, ItemPointer heaptid, int m, double ml, int maxLevel, HnswAllocator * allocator)
 {
-	HnswElement element = HnswAlloc(allocator, sizeof(HnswElementData));
+	HnswElement element = (HnswElement) HnswAlloc(allocator, sizeof(HnswElementData));
 
 	int			level = (int) (-log(RandomDouble()) * ml);
 
@@ -276,7 +274,7 @@ HnswAddHeapTid(HnswElement element, ItemPointer heaptid)
 HnswElement
 HnswInitElementFromBlock(BlockNumber blkno, OffsetNumber offno)
 {
-	HnswElement element = palloc(sizeof(HnswElementData));
+	HnswElement element = (HnswElement) palloc(sizeof(HnswElementData));
 	char	   *base = NULL;
 
 	element->blkno = blkno;
@@ -587,7 +585,7 @@ GetElementDistance(char *base, HnswElement element, HnswQuery * q, HnswSupport *
 static HnswSearchCandidate *
 HnswInitSearchCandidate(char *base, HnswElement element, double distance)
 {
-	HnswSearchCandidate *sc = palloc(sizeof(HnswSearchCandidate));
+	HnswSearchCandidate *sc = (HnswSearchCandidate *) palloc(sizeof(HnswSearchCandidate));
 
 	HnswPtrStore(base, sc->element, element);
 	sc->distance = distance;

@@ -1,4 +1,4 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include <float.h>
 
@@ -6,7 +6,6 @@
 #include "access/reloptions.h"
 #include "commands/progress.h"
 #include "commands/vacuum.h"
-#include "ivfflat.h"
 #include "utils/float.h"
 #include "utils/guc.h"
 #include "utils/selfuncs.h"

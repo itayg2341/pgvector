@@ -1,23 +1,17 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include <math.h>
 
-#include "bitvec.h"
 #include "catalog/pg_type.h"
 #include "common/shortest_dec.h"
-#include "fmgr.h"
-#include "halfutils.h"
-#include "halfvec.h"
 #include "lib/stringinfo.h"
 #include "libpq/pqformat.h"
 #include "port.h"				/* for strtof() */
-#include "sparsevec.h"
 #include "utils/array.h"
 #include "utils/builtins.h"
 #include "utils/float.h"
 #include "utils/lsyscache.h"
 #include "utils/numeric.h"
-#include "vector.h"
 
 #define STATE_DIMS(x) (ARR_DIMS(x)[0] - 1)
 #define CreateStateDatums(dim) palloc(sizeof(Datum) * (dim + 1))

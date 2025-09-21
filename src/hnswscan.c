@@ -1,7 +1,7 @@
-#include "postgres.h"
+#include "pgvector.h"
+#include "hnsw.h"
 
 #include "access/relscan.h"
-#include "hnsw.h"
 #include "pgstat.h"
 #include "storage/bufmgr.h"
 #include "storage/lmgr.h"

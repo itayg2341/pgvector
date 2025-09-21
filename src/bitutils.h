@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef BITUTILS_H
 #define BITUTILS_H
 
@@ -13,4 +17,8 @@ extern double (*BitJaccardDistance) (uint32 bytes, unsigned char *ax, unsigned c
 
 void		BitvecInit(void);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

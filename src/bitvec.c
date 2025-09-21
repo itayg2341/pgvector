@@ -1,9 +1,6 @@
-#include "postgres.h"
+#include "pgvector.h"
 
-#include "bitutils.h"
-#include "bitvec.h"
 #include "utils/varbit.h"
-#include "vector.h"
 
 #if PG_VERSION_NUM >= 160000
 #include "varatt.h"

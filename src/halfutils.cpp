@@ -1,7 +1,5 @@
-#include "postgres.h"
+#include "pgvector.h"
 
-#include "halfutils.h"
-#include "halfvec.h"
 
 #ifdef HALFVEC_DISPATCH
 #include <immintrin.h>

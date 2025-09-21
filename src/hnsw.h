@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef HNSW_H
 #define HNSW_H
 
@@ -508,4 +512,8 @@ typedef struct OffsetHashEntry
 #define SH_DECLARE
 #include "lib/simplehash.h"
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

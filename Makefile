@@ -45,6 +45,9 @@ sql/$(EXTENSION)--$(EXTVERSION).sql: sql/$(EXTENSION).sql
 
 PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
+\nPG_CXXFLAGS = $(PG_CFLAGS)\
+SHLIB_LINK = $(CXX)\
+
 include $(PGXS)
 
 # for Mac

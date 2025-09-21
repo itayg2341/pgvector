@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef VECTOR_H
 #define VECTOR_H
 
@@ -27,4 +31,8 @@ int			vector_cmp_internal(Vector * a, Vector * b);
 #define FUNCTION_PREFIX PGDLLEXPORT
 #endif
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

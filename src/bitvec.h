@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef BITVEC_H
 #define BITVEC_H
 
@@ -5,4 +9,8 @@
 
 VarBit	   *InitBitVector(int dim);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
