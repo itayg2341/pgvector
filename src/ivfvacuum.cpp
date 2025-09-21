@@ -19,7 +19,7 @@ ivfflatbulkdelete(IndexVacuumInfo *info, IndexBulkDeleteResult *stats,
 	BlockNumber blkno = IVFFLAT_HEAD_BLKNO;
 	BufferAccessStrategy bas = GetAccessStrategy(BAS_BULKREAD);
 
-	if (stats == NULL)
+	if (stats == nullptr)
 		stats = (IndexBulkDeleteResult *) palloc0(sizeof(IndexBulkDeleteResult));
 
 	/* Iterate over list pages */
@@ -41,7 +41,7 @@ ivfflatbulkdelete(IndexVacuumInfo *info, IndexBulkDeleteResult *stats,
 		/* Iterate over lists */
 		for (coffno = FirstOffsetNumber; coffno <= cmaxoffno; coffno = OffsetNumberNext(coffno))
 		{
-			IvfflatList list = (IvfflatList) PageGetItem(cpage, PageGetItemId(cpage, coffno));
+			IvfflatList list = reinterpret_cast<IvfflatList>PageGetItem(cpage, PageGetItemId(cpage, coffno));
 
 			listPages[coffno - FirstOffsetNumber] = list->startPage;
 		}
@@ -88,7 +88,7 @@ ivfflatbulkdelete(IndexVacuumInfo *info, IndexBulkDeleteResult *stats,
 				/* Find deleted tuples */
 				for (offno = FirstOffsetNumber; offno <= maxoffno; offno = OffsetNumberNext(offno))
 				{
-					IndexTuple	itup = (IndexTuple) PageGetItem(page, PageGetItemId(page, offno));
+					IndexTuple	itup = reinterpret_cast<IndexTuple>PageGetItem(page, PageGetItemId(page, offno));
 					ItemPointer htup = &(itup->t_tid);
 
 					if (callback(htup, callback_state))
@@ -149,10 +149,10 @@ ivfflatvacuumcleanup(IndexVacuumInfo *info, IndexBulkDeleteResult *stats)
 	if (info->analyze_only)
 		return stats;
 
-	/* stats is NULL if ambulkdelete not called */
-	/* OK to return NULL if index not changed */
-	if (stats == NULL)
-		return NULL;
+	/* stats is nullptr if ambulkdelete not called */
+	/* OK to return nullptr if index not changed */
+	if (stats == nullptr)
+		return nullptr;
 
 	stats->num_pages = RelationGetNumberOfBlocks(rel);
 

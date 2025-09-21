@@ -35,7 +35,7 @@ CompareLists(const pairingheap_node *a, const pairingheap_node *b, void *arg)
 static void
 GetScanLists(IndexScanDesc scan, Datum value)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 	BlockNumber nextblkno = IVFFLAT_HEAD_BLKNO;
 	int			listCount = 0;
 	double		maxDistance = DBL_MAX;
@@ -55,7 +55,7 @@ GetScanLists(IndexScanDesc scan, Datum value)
 
 		for (OffsetNumber offno = FirstOffsetNumber; offno <= maxoffno; offno = OffsetNumberNext(offno))
 		{
-			IvfflatList list = (IvfflatList) PageGetItem(cpage, PageGetItemId(cpage, offno));
+			IvfflatList list = reinterpret_cast<IvfflatList>PageGetItem(cpage, PageGetItemId(cpage, offno));
 			double		distance;
 
 			/* Use procinfo from the index instead of scan key for performance */
@@ -111,7 +111,7 @@ GetScanLists(IndexScanDesc scan, Datum value)
 static void
 GetScanItems(IndexScanDesc scan, Datum value)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 	TupleDesc	tupdesc = RelationGetDescr(scan->indexRelation);
 	TupleTableSlot *slot = so->vslot;
 	int			batchProbes = 0;
@@ -142,7 +142,7 @@ GetScanItems(IndexScanDesc scan, Datum value)
 				bool		isnull;
 				ItemId		itemid = PageGetItemId(page, offno);
 
-				itup = (IndexTuple) PageGetItem(page, itemid);
+				itup = reinterpret_cast<IndexTuple>PageGetItem(page, itemid);
 				datum = index_getattr(itup, 1, tupdesc, &isnull);
 
 				/*
@@ -189,12 +189,12 @@ ZeroDistance(FmgrInfo *flinfo, Oid collation, Datum arg1, Datum arg2)
 static Datum
 GetScanValue(IndexScanDesc scan)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 	Datum		value;
 
-	if (scan->orderByData->sk_flags & SK_ISNULL)
+	if (scan->orderByData->sk_flags & SK_ISnullptr)
 	{
-		value = PointerGetDatum(NULL);
+		value = PointerGetDatum(nullptr);
 		so->distfunc = ZeroDistance;
 	}
 	else
@@ -207,7 +207,7 @@ GetScanValue(IndexScanDesc scan)
 		Assert(!VARATT_IS_EXTENDED(DatumGetPointer(value)));
 
 		/* Normalize if needed */
-		if (so->normprocinfo != NULL)
+		if (so->normprocinfo != nullptr)
 		{
 			MemoryContext oldCtx = MemoryContextSwitchTo(so->tmpCtx);
 
@@ -231,7 +231,7 @@ InitScanSortState(TupleDesc tupdesc)
 	Oid			sortCollations[] = {InvalidOid};
 	bool		nullsFirstFlags[] = {false};
 
-	return tuplesort_begin_heap(tupdesc, 1, attNums, sortOperators, sortCollations, nullsFirstFlags, work_mem, NULL, false);
+	return tuplesort_begin_heap(tupdesc, 1, attNums, sortOperators, sortCollations, nullsFirstFlags, work_mem, nullptr, false);
 }
 
 /*
@@ -264,7 +264,7 @@ ivfflatbeginscan(Relation index, int nkeys, int norderbys)
 	if (maxProbes > lists)
 		maxProbes = lists;
 
-	so = (IvfflatScanOpaque) palloc(sizeof(IvfflatScanOpaqueData));
+	so = reinterpret_cast<IvfflatScanOpaque>static_cast<IvfflatScanOpaque>(palloc(sizeof(IvfflatScanOpaqueData)));
 	so->typeInfo = IvfflatGetTypeInfo(index);
 	so->first = true;
 	so->probes = probes;
@@ -319,7 +319,7 @@ ivfflatbeginscan(Relation index, int nkeys, int norderbys)
 void
 ivfflatrescan(IndexScanDesc scan, ScanKey keys, int nkeys, ScanKey orderbys, int norderbys)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 
 	so->first = true;
 	pairingheap_reset(so->listQueue);
@@ -338,7 +338,7 @@ ivfflatrescan(IndexScanDesc scan, ScanKey keys, int nkeys, ScanKey orderbys, int
 bool
 ivfflatgettuple(IndexScanDesc scan, ScanDirection dir)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 	ItemPointer heaptid;
 	bool		isnull;
 
@@ -356,7 +356,7 @@ ivfflatgettuple(IndexScanDesc scan, ScanDirection dir)
 		pgstat_count_index_scan(scan->indexRelation);
 
 		/* Safety check */
-		if (scan->orderByData == NULL)
+		if (scan->orderByData == nullptr)
 			elog(ERROR, "cannot scan ivfflat index without order");
 
 		/* Requires MVCC-compliant snapshot as not able to pin during sorting */
@@ -371,7 +371,7 @@ ivfflatgettuple(IndexScanDesc scan, ScanDirection dir)
 		so->value = value;
 	}
 
-	while (!tuplesort_gettupleslot(so->sortstate, true, false, so->mslot, NULL))
+	while (!tuplesort_gettupleslot(so->sortstate, true, false, so->mslot, nullptr))
 	{
 		if (so->listIndex == so->maxProbes)
 			return false;
@@ -379,7 +379,7 @@ ivfflatgettuple(IndexScanDesc scan, ScanDirection dir)
 		IvfflatBench("GetScanItems", GetScanItems(scan, so->value));
 	}
 
-	heaptid = (ItemPointer) DatumGetPointer(slot_getattr(so->mslot, 2, &isnull));
+	heaptid = reinterpret_cast<ItemPointer>DatumGetPointer(slot_getattr(so->mslot, 2, &isnull));
 
 	scan->xs_heaptid = *heaptid;
 	scan->xs_recheck = false;
@@ -393,7 +393,7 @@ ivfflatgettuple(IndexScanDesc scan, ScanDirection dir)
 void
 ivfflatendscan(IndexScanDesc scan)
 {
-	IvfflatScanOpaque so = (IvfflatScanOpaque) scan->opaque;
+	IvfflatScanOpaque so = reinterpret_cast<IvfflatScanOpaque>scan->opaque;
 
 	/* Free any temporary files */
 	tuplesort_end(so->sortstate);
@@ -401,5 +401,5 @@ ivfflatendscan(IndexScanDesc scan)
 	MemoryContextDelete(so->tmpCtx);
 
 	pfree(so);
-	scan->opaque = NULL;
+	scan->opaque = nullptr;
 }

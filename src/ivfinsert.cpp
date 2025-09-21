@@ -42,7 +42,7 @@ FindInsertPage(Relation index, Datum *values, BlockNumber *insertPage, ListInfo 
 			IvfflatList list;
 			double		distance;
 
-			list = (IvfflatList) PageGetItem(cpage, PageGetItemId(cpage, offno));
+			list = reinterpret_cast<IvfflatList>PageGetItem(cpage, PageGetItemId(cpage, offno));
 			distance = DatumGetFloat8(FunctionCall2Coll(procinfo, collation, values[0], PointerGetDatum(&list->center)));
 
 			if (distance < minDistance || !BlockNumberIsValid(*insertPage))
@@ -83,7 +83,7 @@ InsertTuple(Relation index, Datum *values, bool *isnull, ItemPointer heap_tid, R
 
 	/* Normalize if needed */
 	normprocinfo = IvfflatOptionalProcInfo(index, IVFFLAT_NORM_PROC);
-	if (normprocinfo != NULL)
+	if (normprocinfo != nullptr)
 	{
 		Oid			collation = index->rd_indcollation[0];
 
@@ -94,7 +94,7 @@ InsertTuple(Relation index, Datum *values, bool *isnull, ItemPointer heap_tid, R
 	}
 
 	/* Ensure index is valid */
-	IvfflatGetMetaPageInfo(index, NULL, NULL);
+	IvfflatGetMetaPageInfo(index, nullptr, nullptr);
 
 	/* Find the insert page - sets the page and list info */
 	FindInsertPage(index, &value, &insertPage, &listInfo);

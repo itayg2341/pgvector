@@ -48,7 +48,7 @@ AddSample(Datum *values, IvfflatBuildState * buildstate)
 	 * Normalize with KMEANS_NORM_PROC since spherical distance function
 	 * expects unit vectors
 	 */
-	if (buildstate->kmeansnormprocinfo != NULL)
+	if (buildstate->kmeansnormprocinfo != nullptr)
 	{
 		if (!IvfflatCheckNorm(buildstate->kmeansnormprocinfo, buildstate->collation, value))
 			return;
@@ -126,7 +126,7 @@ SampleRows(IvfflatBuildState * buildstate)
 		BlockNumber targblock = BlockSampler_Next(&buildstate->bs);
 
 		table_index_build_range_scan(buildstate->heap, buildstate->index, buildstate->indexInfo,
-									 false, true, false, targblock, 1, SampleCallback, (void *) buildstate, NULL);
+									 false, true, false, targblock, 1, SampleCallback, (void *) buildstate, nullptr);
 	}
 }
 
@@ -146,7 +146,7 @@ AddTupleToSort(Relation index, ItemPointer tid, Datum *values, IvfflatBuildState
 	Datum		value = PointerGetDatum(PG_DETOAST_DATUM(values[0]));
 
 	/* Normalize if needed */
-	if (buildstate->normprocinfo != NULL)
+	if (buildstate->normprocinfo != nullptr)
 	{
 		if (!IvfflatCheckNorm(buildstate->normprocinfo, buildstate->collation, value))
 			return;
@@ -224,7 +224,7 @@ BuildCallback(Relation index, ItemPointer tid, Datum *values,
 static inline void
 GetNextTuple(Tuplesortstate *sortstate, TupleDesc tupdesc, TupleTableSlot *slot, IndexTuple *itup, int *list)
 {
-	if (tuplesort_gettupleslot(sortstate, true, false, slot, NULL))
+	if (tuplesort_gettupleslot(sortstate, true, false, slot, nullptr))
 	{
 		Datum		value;
 		bool		isnull;
@@ -234,7 +234,7 @@ GetNextTuple(Tuplesortstate *sortstate, TupleDesc tupdesc, TupleTableSlot *slot,
 
 		/* Form the index tuple */
 		*itup = index_form_tuple(tupdesc, &value, &isnull);
-		(*itup)->t_tid = *((ItemPointer) DatumGetPointer(slot_getattr(slot, 2, &isnull)));
+		(*itup)->t_tid = *((*reinterpret_cast<ItemPointer>(DatumGetPointer(slot_getattr(slot, 2, &isnull)));
 	}
 	else
 		*list = -1;
@@ -247,7 +247,7 @@ static void
 InsertTuples(Relation index, IvfflatBuildState * buildstate, ForkNumber forkNum)
 {
 	int			list;
-	IndexTuple	itup = NULL;	/* silence compiler warning */
+	IndexTuple	itup = nullptr;	/* silence compiler warning */
 	int64		inserted = 0;
 
 	TupleTableSlot *slot = MakeSingleTupleTableSlot(buildstate->sortdesc, &TTSOpsMinimalTuple);
@@ -347,7 +347,7 @@ InitBuildState(IvfflatBuildState * buildstate, Relation heap, Relation index, In
 	buildstate->collation = index->rd_indcollation[0];
 
 	/* Require more than one dimension for spherical k-means */
-	if (buildstate->kmeansnormprocinfo != NULL && buildstate->dimensions == 1)
+	if (buildstate->kmeansnormprocinfo != nullptr && buildstate->dimensions == 1)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 				 errmsg("dimensions must be greater than one for this opclass")));
@@ -373,7 +373,7 @@ InitBuildState(IvfflatBuildState * buildstate, Relation heap, Relation index, In
 	buildstate->listCounts = palloc0(sizeof(int) * buildstate->lists);
 #endif
 
-	buildstate->ivfleader = NULL;
+	buildstate->ivfleader = nullptr;
 }
 
 /*
@@ -410,13 +410,13 @@ ComputeCenters(IvfflatBuildState * buildstate)
 		numSamples = 10000;
 
 	/* Skip samples for unlogged table */
-	if (buildstate->heap == NULL)
+	if (buildstate->heap == nullptr)
 		numSamples = 1;
 
 	/* Sample rows */
 	/* TODO Ensure within maintenance_work_mem */
 	buildstate->samples = VectorArrayInit(numSamples, buildstate->dimensions, buildstate->centers->itemsize);
-	if (buildstate->heap != NULL)
+	if (buildstate->heap != nullptr)
 	{
 		SampleRows(buildstate);
 
@@ -835,7 +835,7 @@ IvfflatBeginParallel(IvfflatBuildState * buildstate, bool isconcurrent, int requ
 	InitializeParallelDSM(pcxt);
 
 	/* If no DSM segment was available, back out (do serial build) */
-	if (pcxt->seg == NULL)
+	if (pcxt->seg == nullptr)
 	{
 		if (IsMVCCSnapshot(snapshot))
 			UnregisterSnapshot(snapshot);
@@ -925,12 +925,12 @@ static void
 AssignTuples(IvfflatBuildState * buildstate)
 {
 	int			parallel_workers = 0;
-	SortCoordinate coordinate = NULL;
+	SortCoordinate coordinate = nullptr;
 
 	pgstat_progress_update_param(PROGRESS_CREATEIDX_SUBPHASE, PROGRESS_IVFFLAT_PHASE_ASSIGN);
 
 	/* Calculate parallel workers */
-	if (buildstate->heap != NULL)
+	if (buildstate->heap != nullptr)
 		parallel_workers = plan_create_index_workers(RelationGetRelid(buildstate->heap), RelationGetRelid(buildstate->index));
 
 	/* Attempt to launch parallel worker scan when required */
@@ -940,7 +940,7 @@ AssignTuples(IvfflatBuildState * buildstate)
 	/* Set up coordination state if at least one worker launched */
 	if (buildstate->ivfleader)
 	{
-		coordinate = (SortCoordinate) palloc0(sizeof(SortCoordinateData));
+		coordinate = (static_cast<SortCoordinate>)palloc0(sizeof(SortCoordinateData));
 		coordinate->isWorker = false;
 		coordinate->nParticipants = buildstate->ivfleader->nparticipanttuplesorts;
 		coordinate->sharedsort = buildstate->ivfleader->sharedsort;
@@ -950,13 +950,13 @@ AssignTuples(IvfflatBuildState * buildstate)
 	buildstate->sortstate = InitBuildSortState(buildstate->sortdesc, maintenance_work_mem, coordinate);
 
 	/* Add tuples to sort */
-	if (buildstate->heap != NULL)
+	if (buildstate->heap != nullptr)
 	{
 		if (buildstate->ivfleader)
 			buildstate->reltuples = ParallelHeapScan(buildstate);
 		else
 			buildstate->reltuples = table_index_build_scan(buildstate->heap, buildstate->index, buildstate->indexInfo,
-														   true, true, BuildCallback, (void *) buildstate, NULL);
+														   true, true, BuildCallback, (void *) buildstate, nullptr);
 
 #ifdef IVFFLAT_KMEANS_DEBUG
 		PrintKmeansMetrics(buildstate);
@@ -1013,10 +1013,10 @@ BuildIndex(Relation heap, Relation index, IndexInfo *indexInfo,
 /*
  * Build the index for a logged table
  */
-IndexBuildResult *
+extern "C" IndexBuildResult **
 ivfflatbuild(Relation heap, Relation index, IndexInfo *indexInfo)
 {
-	IndexBuildResult *result;
+	extern "C" IndexBuildResult **result;
 	IvfflatBuildState buildstate;
 
 #ifdef IVFFLAT_BENCH
@@ -1025,7 +1025,7 @@ ivfflatbuild(Relation heap, Relation index, IndexInfo *indexInfo)
 
 	BuildIndex(heap, index, indexInfo, &buildstate, MAIN_FORKNUM);
 
-	result = (IndexBuildResult *) palloc(sizeof(IndexBuildResult));
+	result = (extern "C" IndexBuildResult **) palloc(sizeof(IndexBuildResult));
 	result->heap_tuples = buildstate.reltuples;
 	result->index_tuples = buildstate.indtuples;
 
@@ -1041,5 +1041,5 @@ ivfflatbuildempty(Relation index)
 	IndexInfo  *indexInfo = BuildIndexInfo(index);
 	IvfflatBuildState buildstate;
 
-	BuildIndex(NULL, index, indexInfo, &buildstate, INIT_FORKNUM);
+	BuildIndex(nullptr, index, indexInfo, &buildstate, INIT_FORKNUM);
 }
