@@ -23,7 +23,7 @@ static relopt_kind ivfflat_relopt_kind;
 static const struct config_enum_entry ivfflat_iterative_scan_options[] = {
 	{"off", IVFFLAT_ITERATIVE_SCAN_OFF, false},
 	{"relaxed_order", IVFFLAT_ITERATIVE_SCAN_RELAXED, false},
-	{NULL, 0, false}
+	{nullptr, 0, false}
 };
 
 /*
@@ -38,16 +38,16 @@ IvfflatInit(void)
 
 	DefineCustomIntVariable("ivfflat.probes", "Sets the number of probes",
 							"Valid range is 1..lists.", &ivfflat_probes,
-							IVFFLAT_DEFAULT_PROBES, IVFFLAT_MIN_LISTS, IVFFLAT_MAX_LISTS, PGC_USERSET, 0, NULL, NULL, NULL);
+							IVFFLAT_DEFAULT_PROBES, IVFFLAT_MIN_LISTS, IVFFLAT_MAX_LISTS, PGC_USERSET, 0, nullptr, nullptr, nullptr);
 
 	DefineCustomEnumVariable("ivfflat.iterative_scan", "Sets the mode for iterative scans",
-							 NULL, &ivfflat_iterative_scan,
-							 IVFFLAT_ITERATIVE_SCAN_OFF, ivfflat_iterative_scan_options, PGC_USERSET, 0, NULL, NULL, NULL);
+							 nullptr, &ivfflat_iterative_scan,
+							 IVFFLAT_ITERATIVE_SCAN_OFF, ivfflat_iterative_scan_options, PGC_USERSET, 0, nullptr, nullptr, nullptr);
 
 	/* If this is less than probes, probes is used */
 	DefineCustomIntVariable("ivfflat.max_probes", "Sets the max number of probes for iterative scans",
-							NULL, &ivfflat_max_probes,
-							IVFFLAT_MAX_LISTS, IVFFLAT_MIN_LISTS, IVFFLAT_MAX_LISTS, PGC_USERSET, 0, NULL, NULL, NULL);
+							nullptr, &ivfflat_max_probes,
+							IVFFLAT_MAX_LISTS, IVFFLAT_MIN_LISTS, IVFFLAT_MAX_LISTS, PGC_USERSET, 0, nullptr, nullptr, nullptr);
 
 	MarkGUCPrefixReserved("ivfflat");
 }
@@ -69,7 +69,7 @@ ivfflatbuildphasename(int64 phasenum)
 		case PROGRESS_IVFFLAT_PHASE_LOAD:
 			return "loading tuples";
 		default:
-			return NULL;
+			return nullptr;
 	}
 }
 
@@ -110,7 +110,7 @@ ivfflatcostestimate(PlannerInfo *root, IndexPath *path, double loop_count,
 	genericcostestimate(root, path, loop_count, &costs);
 
 	index = index_open(path->indexinfo->indexoid, NoLock);
-	IvfflatGetMetaPageInfo(index, &lists, NULL);
+	IvfflatGetMetaPageInfo(index, &lists, nullptr);
 	index_close(index, NoLock);
 
 	/* Get the ratio of lists that we need to visit */
@@ -118,7 +118,7 @@ ivfflatcostestimate(PlannerInfo *root, IndexPath *path, double loop_count,
 	if (ratio > 1.0)
 		ratio = 1.0;
 
-	get_tablespace_page_costs(path->indexinfo->reltablespace, NULL, &spc_seq_page_cost);
+	get_tablespace_page_costs(path->indexinfo->reltablespace, nullptr, &spc_seq_page_cost);
 
 	/* Change some page cost from random to sequential */
 	costs.indexTotalCost -= sequentialRatio * costs.numIndexPages * (costs.spc_random_page_cost - spc_seq_page_cost);
@@ -174,7 +174,7 @@ ivfflatvalidate(Oid opclassoid)
  *
  * See https://www.postgresql.org/docs/current/index-api.html
  */
-FUNCTION_PREFIX PG_FUNCTION_INFO_V1(ivfflathandler);
+extern "C" extern "C" extern "C" PG_FUNCTION_INFO_V1(ivfflathandler);
 Datum
 ivfflathandler(PG_FUNCTION_ARGS)
 {
@@ -216,38 +216,38 @@ ivfflathandler(PG_FUNCTION_ARGS)
 	amroutine->ambuildempty = ivfflatbuildempty;
 	amroutine->aminsert = ivfflatinsert;
 #if PG_VERSION_NUM >= 170000
-	amroutine->aminsertcleanup = NULL;
+	amroutine->aminsertcleanup = nullptr;
 #endif
 	amroutine->ambulkdelete = ivfflatbulkdelete;
 	amroutine->amvacuumcleanup = ivfflatvacuumcleanup;
-	amroutine->amcanreturn = NULL;	/* tuple not included in heapsort */
+	amroutine->amcanreturn = nullptr;	/* tuple not included in heapsort */
 	amroutine->amcostestimate = ivfflatcostestimate;
 #if PG_VERSION_NUM >= 180000
-	amroutine->amgettreeheight = NULL;
+	amroutine->amgettreeheight = nullptr;
 #endif
 	amroutine->amoptions = ivfflatoptions;
-	amroutine->amproperty = NULL;	/* TODO AMPROP_DISTANCE_ORDERABLE */
+	amroutine->amproperty = nullptr;	/* TODO AMPROP_DISTANCE_ORDERABLE */
 	amroutine->ambuildphasename = ivfflatbuildphasename;
 	amroutine->amvalidate = ivfflatvalidate;
 #if PG_VERSION_NUM >= 140000
-	amroutine->amadjustmembers = NULL;
+	amroutine->amadjustmembers = nullptr;
 #endif
 	amroutine->ambeginscan = ivfflatbeginscan;
 	amroutine->amrescan = ivfflatrescan;
 	amroutine->amgettuple = ivfflatgettuple;
-	amroutine->amgetbitmap = NULL;
+	amroutine->amgetbitmap = nullptr;
 	amroutine->amendscan = ivfflatendscan;
-	amroutine->ammarkpos = NULL;
-	amroutine->amrestrpos = NULL;
+	amroutine->ammarkpos = nullptr;
+	amroutine->amrestrpos = nullptr;
 
 	/* Interface functions to support parallel index scans */
-	amroutine->amestimateparallelscan = NULL;
-	amroutine->aminitparallelscan = NULL;
-	amroutine->amparallelrescan = NULL;
+	amroutine->amestimateparallelscan = nullptr;
+	amroutine->aminitparallelscan = nullptr;
+	amroutine->amparallelrescan = nullptr;
 
 #if PG_VERSION_NUM >= 180000
-	amroutine->amtranslatestrategy = NULL;
-	amroutine->amtranslatecmptype = NULL;
+	amroutine->amtranslatestrategy = nullptr;
+	amroutine->amtranslatecmptype = nullptr;
 #endif
 
 	PG_RETURN_POINTER(amroutine);
