@@ -1,12 +1,7 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include "access/generic_xlog.h"
-#include "bitvec.h"
 #include "catalog/pg_type.h"
-#include "fmgr.h"
-#include "halfutils.h"
-#include "halfvec.h"
-#include "ivfflat.h"
 #include "storage/bufmgr.h"
 
 /*
@@ -15,7 +10,7 @@
 VectorArray
 VectorArrayInit(int maxlen, int dimensions, Size itemsize)
 {
-	VectorArray res = palloc(sizeof(VectorArrayData));
+	VectorArray res = (VectorArray) palloc(sizeof(VectorArrayData));
 
 	/* Ensure items are aligned to prevent UB */
 	itemsize = MAXALIGN(itemsize);
@@ -24,7 +19,7 @@ VectorArrayInit(int maxlen, int dimensions, Size itemsize)
 	res->maxlen = maxlen;
 	res->dim = dimensions;
 	res->itemsize = itemsize;
-	res->items = palloc_extended(maxlen * itemsize, MCXT_ALLOC_ZERO | MCXT_ALLOC_HUGE);
+	res->items = (char *) palloc_extended(maxlen * itemsize, MCXT_ALLOC_ZERO | MCXT_ALLOC_HUGE);
 	return res;
 }
 

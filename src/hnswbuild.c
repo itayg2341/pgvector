@@ -1,3 +1,5 @@
+#include "pgvector.h"
+#include "hnsw.h"
 /*
  * The HNSW build happens in two phases:
  *
@@ -34,7 +36,6 @@
  * After we have finished building the graph, we perform one more scan through
  * the index and write all the pages to the WAL.
  */
-#include "postgres.h"
 
 #include <math.h>
 
@@ -46,7 +47,6 @@
 #include "catalog/index.h"
 #include "catalog/pg_type_d.h"
 #include "commands/progress.h"
-#include "hnsw.h"
 #include "miscadmin.h"
 #include "optimizer/optimizer.h"
 #include "storage/bufmgr.h"

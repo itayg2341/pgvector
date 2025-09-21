@@ -1,17 +1,12 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include <float.h>
 #include <math.h>
 
-#include "bitvec.h"
-#include "halfutils.h"
-#include "halfvec.h"
-#include "ivfflat.h"
 #include "miscadmin.h"
 #include "utils/builtins.h"
 #include "utils/datum.h"
 #include "utils/memutils.h"
-#include "vector.h"
 
 /*
  * Initialize with kmeans++

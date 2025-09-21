@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef IVFFLAT_H
 #define IVFFLAT_H
 
@@ -337,4 +341,8 @@ void		ivfflatrescan(IndexScanDesc scan, ScanKey keys, int nkeys, ScanKey orderby
 bool		ivfflatgettuple(IndexScanDesc scan, ScanDirection dir);
 void		ivfflatendscan(IndexScanDesc scan);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

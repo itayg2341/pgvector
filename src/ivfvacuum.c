@@ -1,8 +1,7 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include "access/generic_xlog.h"
 #include "commands/vacuum.h"
-#include "ivfflat.h"
 #include "storage/bufmgr.h"
 
 #if PG_VERSION_NUM >= 180000

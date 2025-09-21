@@ -1,4 +1,4 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include <limits.h>
 #include <math.h>
@@ -6,16 +6,11 @@
 #include "catalog/pg_type.h"
 #include "common/shortest_dec.h"
 #include "common/string.h"
-#include "fmgr.h"
-#include "halfutils.h"
-#include "halfvec.h"
 #include "libpq/pqformat.h"
-#include "sparsevec.h"
 #include "utils/array.h"
 #include "utils/builtins.h"
 #include "utils/float.h"
 #include "utils/lsyscache.h"
-#include "vector.h"
 
 typedef struct SparseInputElement
 {

@@ -1,4 +1,5 @@
-#include "postgres.h"
+#include "pgvector.h"
+#include "hnsw.h"
 
 #include <float.h>
 #include <math.h>
@@ -7,7 +8,6 @@
 #include "access/reloptions.h"
 #include "commands/progress.h"
 #include "commands/vacuum.h"
-#include "hnsw.h"
 #include "miscadmin.h"
 #include "utils/float.h"
 #include "utils/guc.h"

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef HALFVEC_H
 #define HALFVEC_H
 
@@ -67,4 +71,8 @@ typedef struct HalfVector
 
 HalfVector *InitHalfVector(int dim);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

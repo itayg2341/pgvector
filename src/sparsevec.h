@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef SPARSEVEC_H
 #define SPARSEVEC_H
 
@@ -37,4 +41,8 @@ SPARSEVEC_VALUES(SparseVector * x)
 
 SparseVector *InitSparseVector(int dim, int nnz);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

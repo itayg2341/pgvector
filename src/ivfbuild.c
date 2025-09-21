@@ -1,4 +1,4 @@
-#include "postgres.h"
+#include "pgvector.h"
 
 #include <float.h>
 
@@ -6,19 +6,15 @@
 #include "access/tableam.h"
 #include "access/parallel.h"
 #include "access/xact.h"
-#include "bitvec.h"
 #include "catalog/index.h"
 #include "catalog/pg_operator_d.h"
 #include "catalog/pg_type_d.h"
 #include "commands/progress.h"
-#include "halfvec.h"
-#include "ivfflat.h"
 #include "miscadmin.h"
 #include "optimizer/optimizer.h"
 #include "storage/bufmgr.h"
 #include "tcop/tcopprot.h"
 #include "utils/memutils.h"
-#include "vector.h"
 
 #if PG_VERSION_NUM >= 140000
 #include "utils/backend_progress.h"
