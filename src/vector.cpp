@@ -106,8 +106,7 @@ CheckElement(float value)
 /*
  * Allocate and initialize a new vector
  */
-Vector *
-InitVector(int dim)
+Vector *Vector::Init(int dim)
 {
 	Vector	   *result;
 	int			size;
@@ -253,7 +252,7 @@ vector_in(PG_FUNCTION_ARGS)
 	CheckDim(dim);
 	CheckExpectedDim(typmod, dim);
 
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 	for (int i = 0; i < dim; i++)
 		result->x[i] = x[i];
 
@@ -308,8 +307,7 @@ vector_out(PG_FUNCTION_ARGS)
 /*
  * Print vector - useful for debugging
  */
-void
-PrintVector(char *msg, Vector * vector)
+void Vector::Print(char *msg)
 {
 	char	   *out = DatumGetPointer(DirectFunctionCall1(vector_out, PointerGetDatum(vector)));
 
@@ -372,7 +370,7 @@ vector_recv(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_DATA_EXCEPTION),
 				 errmsg("expected unused to be 0, not %d", unused)));
 
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 	for (int i = 0; i < dim; i++)
 	{
 		result->x[i] = pq_getmsgfloat4(buf);
@@ -449,7 +447,7 @@ array_to_vector(PG_FUNCTION_ARGS)
 	CheckDim(nelemsp);
 	CheckExpectedDim(typmod, nelemsp);
 
-	result = InitVector(nelemsp);
+	result = Vector::Init(nelemsp);
 
 	if (ARR_ELEMTYPE(array) == INT4OID)
 	{
@@ -529,7 +527,7 @@ halfvec_to_vector(PG_FUNCTION_ARGS)
 	CheckDim(vec->dim);
 	CheckExpectedDim(typmod, vec->dim);
 
-	result = InitVector(vec->dim);
+	result = Vector::Init(vec->dim);
 
 	for (int i = 0; i < vec->dim; i++)
 		result->x[i] = HalfToFloat4(vec->x[i]);
@@ -772,7 +770,7 @@ l2_normalize(PG_FUNCTION_ARGS)
 	Vector	   *result;
 	float	   *rx;
 
-	result = InitVector(a->dim);
+	result = Vector::Init(a->dim);
 	rx = result->x;
 
 	/* Auto-vectorized */
@@ -814,7 +812,7 @@ vector_add(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	result = InitVector(a->dim);
+	result = Vector::Init(a->dim);
 	rx = result->x;
 
 	/* Auto-vectorized */
@@ -847,7 +845,7 @@ vector_sub(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	result = InitVector(a->dim);
+	result = Vector::Init(a->dim);
 	rx = result->x;
 
 	/* Auto-vectorized */
@@ -880,7 +878,7 @@ vector_mul(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	result = InitVector(a->dim);
+	result = Vector::Init(a->dim);
 	rx = result->x;
 
 	/* Auto-vectorized */
@@ -913,7 +911,7 @@ vector_concat(PG_FUNCTION_ARGS)
 	int			dim = a->dim + b->dim;
 
 	CheckDim(dim);
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 
 	/* Auto-vectorized */
 	for (int i = 0, imax = a->dim; i < imax; i++)
@@ -996,7 +994,7 @@ subvector(PG_FUNCTION_ARGS)
 
 	dim = end - start;
 	CheckDim(dim);
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 
 	for (int i = 0; i < dim; i++)
 		result->x[i] = ax[start - 1 + i];
@@ -1007,15 +1005,14 @@ subvector(PG_FUNCTION_ARGS)
 /*
  * Internal helper to compare vectors
  */
-int
-vector_cmp_internal(Vector * a, Vector * b)
+int Vector::Cmp(Vector *b)
 {
-	int			dim = Min(a->dim, b->dim);
+	int			dim = Min(this->dim, b->dim);
 
 	/* Check values before dimensions to be consistent with Postgres arrays */
 	for (int i = 0; i < dim; i++)
 	{
-		if (a->x[i] < b->x[i])
+		if (this->x[i] < b->x[i])
 			return -1;
 
 		if (a->x[i] > b->x[i])
@@ -1041,7 +1038,7 @@ vector_lt(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) < 0);
+	PG_RETURN_BOOL(a->Cmp(b) < 0);
 }
 
 /*
@@ -1054,7 +1051,7 @@ vector_le(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) <= 0);
+	PG_RETURN_BOOL(a->Cmp(b) <= 0);
 }
 
 /*
@@ -1067,7 +1064,7 @@ vector_eq(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) == 0);
+	PG_RETURN_BOOL(a->Cmp(b) == 0);
 }
 
 /*
@@ -1080,7 +1077,7 @@ vector_ne(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) != 0);
+	PG_RETURN_BOOL(a->Cmp(b) != 0);
 }
 
 /*
@@ -1093,7 +1090,7 @@ vector_ge(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) >= 0);
+	PG_RETURN_BOOL(a->Cmp(b) >= 0);
 }
 
 /*
@@ -1106,7 +1103,7 @@ vector_gt(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_BOOL(vector_cmp_internal(a, b) > 0);
+	PG_RETURN_BOOL(a->Cmp(b) > 0);
 }
 
 /*
@@ -1119,7 +1116,7 @@ vector_cmp(PG_FUNCTION_ARGS)
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
 
-	PG_RETURN_INT32(vector_cmp_internal(a, b));
+	PG_RETURN_INT32(a->Cmp(b));
 }
 
 /*
@@ -1278,7 +1275,7 @@ vector_avg(PG_FUNCTION_ARGS)
 	/* Create vector */
 	dim = STATE_DIMS(statearray);
 	CheckDim(dim);
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 	for (int i = 0; i < dim; i++)
 	{
 		result->x[i] = statevalues[i + 1] / n;
@@ -1304,7 +1301,7 @@ sparsevec_to_vector(PG_FUNCTION_ARGS)
 	CheckDim(dim);
 	CheckExpectedDim(typmod, dim);
 
-	result = InitVector(dim);
+	result = Vector::Init(dim);
 	for (int i = 0; i < svec->nnz; i++)
 		result->x[svec->indices[i]] = values[i];
 
