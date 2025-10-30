@@ -535,18 +535,7 @@ halfvec_to_vector(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-VECTOR_TARGET_CLONES static float
-VectorL2SquaredDistance(int dim, float *ax, float *bx)
-{
-	float		distance = 0.0;
 
-	/* Auto-vectorized */
-	for (int i = 0; i < dim; i++)
-	{
-		float		diff = ax[i] - bx[i];
-
-		distance += diff * diff;
-	}
 
 	return distance;
 }
@@ -563,7 +552,7 @@ l2_distance(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	PG_RETURN_FLOAT8(sqrt((double) VectorL2SquaredDistance(a->get_dim(), a->get_x(), b->get_x())));
+	PG_RETURN_FLOAT8(sqrt((double) a->L2SquaredDistance(*b)));
 }
 
 /*
@@ -579,20 +568,10 @@ vector_l2_squared_distance(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	PG_RETURN_FLOAT8((double) VectorL2SquaredDistance(a->get_dim(), a->get_x(), b->get_x()));
+	PG_RETURN_FLOAT8((double) a->L2SquaredDistance(*b));
 }
 
-VECTOR_TARGET_CLONES static float
-VectorInnerProduct(int dim, float *ax, float *bx)
-{
-	float		distance = 0.0;
 
-	/* Auto-vectorized */
-	for (int i = 0; i < dim; i++)
-		distance += ax[i] * bx[i];
-
-	return distance;
-}
 
 /*
  * Get the inner product of two vectors
@@ -606,7 +585,7 @@ inner_product(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	PG_RETURN_FLOAT8((double) VectorInnerProduct(a->get_dim(), a->get_x(), b->get_x()));
+	PG_RETURN_FLOAT8((double) (*a) * (*b));
 }
 
 /*
@@ -621,23 +600,10 @@ vector_negative_inner_product(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	PG_RETURN_FLOAT8((double) -VectorInnerProduct(a->get_dim(), a->get_x(), b->get_x()));
+	PG_RETURN_FLOAT8((double) -(*a) * (*b));
 }
 
-VECTOR_TARGET_CLONES static double
-VectorCosineSimilarity(int dim, float *ax, float *bx)
-{
-	float		similarity = 0.0;
-	float		norma = 0.0;
-	float		normb = 0.0;
 
-	/* Auto-vectorized */
-	for (int i = 0; i < dim; i++)
-	{
-		similarity += ax[i] * bx[i];
-		norma += ax[i] * ax[i];
-		normb += bx[i] * bx[i];
-	}
 
 	/* Use sqrt(a * b) over sqrt(a) * sqrt(b) */
 	return (double) similarity / sqrt((double) norma * (double) normb);
@@ -656,7 +622,7 @@ cosine_distance(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	similarity = VectorCosineSimilarity(a->get_dim(), a->get_x(), b->get_x());
+	similarity = a->CosineSimilarity(*b);
 
 #ifdef _MSC_VER
 	/* /fp:fast may not propagate NaN */
@@ -688,7 +654,7 @@ vector_spherical_distance(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	distance = (double) VectorInnerProduct(a->get_dim(), a->get_x(), b->get_x());
+	distance = (double) (*a) * (*b);
 
 	/* Prevent NaN with acos with loss of precision */
 	if (distance > 1)
@@ -700,17 +666,7 @@ vector_spherical_distance(PG_FUNCTION_ARGS)
 }
 
 /* Does not require FMA, but keep logic simple */
-VECTOR_TARGET_CLONES static float
-VectorL1Distance(int dim, float *ax, float *bx)
-{
-	float		distance = 0.0;
 
-	/* Auto-vectorized */
-	for (int i = 0; i < dim; i++)
-		distance += fabsf(ax[i] - bx[i]);
-
-	return distance;
-}
 
 /*
  * Get the L1 distance between two vectors
@@ -724,7 +680,7 @@ l1_distance(PG_FUNCTION_ARGS)
 
 	CheckDims(a, b);
 
-	PG_RETURN_FLOAT8((double) VectorL1Distance(a->get_dim(), a->get_x(), b->get_x()));
+	PG_RETURN_FLOAT8((double) a->L1Distance(*b));
 }
 
 /*
@@ -1015,14 +971,14 @@ int Vector::Cmp(Vector *b)
 		if (this->x[i] < b->x[i])
 			return -1;
 
-		if (a->x[i] > b->x[i])
+		if (this->x[i] > b->x[i])
 			return 1;
 	}
 
-	if (a->get_dim() < b->get_dim())
+	if (this->get_dim() < b->get_dim())
 		return -1;
 
-	if (a->get_dim() > b->get_dim())
+	if (this->get_dim() > b->get_dim())
 		return 1;
 
 	return 0;
@@ -1306,6 +1262,64 @@ sparsevec_to_vector(PG_FUNCTION_ARGS)
 		result->get_x()[svec->indices[i]] = values[i];
 
 	PG_RETURN_POINTER(result);
+}
+
+
+VECTOR_TARGET_CLONES
+float
+Vector::L2SquaredDistance(const Vector &other) const
+{
+floatdistance = 0.0;
+const float   *ax = get_x();
+const float   *bx = other.get_x();
+
+/* Auto-vectorized */
+for (int i = 0; i < get_dim(); i++)
+{
+floatdiff = ax[i] - bx[i];
+
+distance += diff * diff;
+}
+
+return distance;
+}
+
+VECTOR_TARGET_CLONES
+double
+Vector::CosineSimilarity(const Vector &other) const
+{
+floatsimilarity = 0.0;
+floatnorma = 0.0;
+floatnormb = 0.0;
+const float   *ax = get_x();
+const float   *bx = other.get_x();
+
+/* Auto-vectorized */
+for (int i = 0; i < get_dim(); i++)
+{
+similarity += ax[i] * bx[i];
+norma += ax[i] * ax[i];
+normb += bx[i] * bx[i];
+}
+
+/* Use sqrt(a * b) over sqrt(a) * sqrt(b) */
+return (double) similarity / sqrt((double) norma * (double) normb);
+}
+
+/* Does not require FMA, but keep logic simple */
+VECTOR_TARGET_CLONES
+float
+Vector::L1Distance(const Vector &other) const
+{
+floatdistance = 0.0;
+const float   *ax = get_x();
+const float   *bx = other.get_x();
+
+/* Auto-vectorized */
+for (int i = 0; i < get_dim(); i++)
+distance += fabsf(ax[i] - bx[i]);
+
+return distance;
 }
 
 Vector *
