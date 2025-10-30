@@ -114,7 +114,7 @@ Vector *Vector::Init(int dim)
 	size = VECTOR_SIZE(dim);
 	result = (Vector *) palloc0(size);
 	SET_VARSIZE(result, size);
-	result->get_dim() = dim;
+	result->dim = dim;
 
 	return result;
 }
@@ -392,7 +392,7 @@ vector_send(PG_FUNCTION_ARGS)
 
 	pq_begintypsend(&buf);
 	pq_sendint(&buf, vec->get_dim(), sizeof(int16));
-	pq_sendint(&buf, vec->get_unused(), sizeof(int16));
+	pq_sendint(&buf, vec->unused, sizeof(int16));
 	for (int i = 0; i < vec->get_dim(); i++)
 		pq_sendfloat4(&buf, vec->get_x()[i]);
 
@@ -1007,22 +1007,22 @@ subvector(PG_FUNCTION_ARGS)
  */
 int Vector::Cmp(Vector *b)
 {
-	int			dim = Min(this->get_dim(), b->get_dim());
+	int			dim = Min(this->dim, b->dim);
 
 	/* Check values before dimensions to be consistent with Postgres arrays */
 	for (int i = 0; i < dim; i++)
 	{
-		if (this->get_x()[i] < b->get_x()[i])
+		if (this->x[i] < b->x[i])
 			return -1;
 
-		if (this->get_x()[i] > b->get_x()[i])
+		if (a->x[i] > b->x[i])
 			return 1;
 	}
 
-	if (this->get_dim() < b->get_dim())
+	if (a->get_dim() < b->get_dim())
 		return -1;
 
-	if (this->get_dim() > b->get_dim())
+	if (a->get_dim() > b->get_dim())
 		return 1;
 
 	return 0;
@@ -1306,4 +1306,72 @@ sparsevec_to_vector(PG_FUNCTION_ARGS)
 		result->get_x()[svec->indices[i]] = values[i];
 
 	PG_RETURN_POINTER(result);
+}
+
+Vector *
+Vector::operator+(const Vector &other) const
+{
+if (this->get_dim() != other.get_dim())
+ereport(ERROR,
+(errcode(ERRCODE_DATA_EXCEPTION),
+ errmsg("different vector dimensions %d and %d", this->get_dim(), other.get_dim())));
+
+Vector *result = Vector::Init(this->get_dim());
+float *rx = result->get_x();
+const float *ax = this->get_x();
+const float *bx = other.get_x();
+
+for (int i = 0; i < this->get_dim(); i++)
+rx[i] = ax[i] + bx[i];
+
+for (int i = 0; i < this->get_dim(); i++)
+{
+if (isinf(rx[i]))
+float_overflow_error();
+}
+
+return result;
+}
+
+Vector *
+Vector::operator-(const Vector &other) const
+{
+if (this->get_dim() != other.get_dim())
+ereport(ERROR,
+(errcode(ERRCODE_DATA_EXCEPTION),
+ errmsg("different vector dimensions %d and %d", this->get_dim(), other.get_dim())));
+
+Vector *result = Vector::Init(this->get_dim());
+float *rx = result->get_x();
+const float *ax = this->get_x();
+const float *bx = other.get_x();
+
+for (int i = 0; i < this->get_dim(); i++)
+rx[i] = ax[i] - bx[i];
+
+for (int i = 0; i < this->get_dim(); i++)
+{
+if (isinf(rx[i]))
+float_overflow_error();
+}
+
+return result;
+}
+
+float
+Vector::operator*(const Vector &other) const
+{
+if (this->get_dim() != other.get_dim())
+ereport(ERROR,
+(errcode(ERRCODE_DATA_EXCEPTION),
+ errmsg("different vector dimensions %d and %d", this->get_dim(), other.get_dim())));
+
+float distance = 0.0;
+const float *ax = this->get_x();
+const float *bx = other.get_x();
+
+for (int i = 0; i < this->get_dim(); i++)
+distance += ax[i] * bx[i];
+
+return distance;
 }
