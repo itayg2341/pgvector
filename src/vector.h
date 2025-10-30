@@ -1,1 +1,58 @@
-#ifdef __cplusplus\nextern "C" {\n#endif\n\n#ifndef VECTOR_H\n#define VECTOR_H\n\n#define VECTOR_MAX_DIM 16000\n\n#define VECTOR_SIZE(_dim)\t\t(offsetof(Vector, x) + sizeof(float)*(_dim))\n#define DatumGetVector(x)\t\t((Vector *) PG_DETOAST_DATUM(x))\n#define PG_GETARG_VECTOR_P(x)\tDatumGetVector(PG_GETARG_DATUM(x))\n#define PG_RETURN_VECTOR_P(x)\tPG_RETURN_POINTER(x)\n\nstruct Vector\n{\n\tint32\t\tvl_len_;\t\t/* varlena header (do not touch directly!) */\n\tint16\t\tdim;\t\t\t/* number of dimensions */\n\tint16\t\tunused;\t\t\t/* reserved for future use, always zero */\n\tfloat\t\tx[FLEXIBLE_ARRAY_MEMBER];\n\n#ifdef __cplusplus\n\tstatic Vector *Init(int dim);\n\tvoid\t\tPrint(char *msg);\n\tint\t\t\tCmp(Vector * b);\n#endif\n};\n\n#ifndef __cplusplus\nVector\t   *InitVector(int dim);\nvoid\t\tPrintVector(char *msg, Vector * vector);\nint\t\t\tvector_cmp_internal(Vector * a, Vector * b);\n#endif\n\n/* TODO Move to better place */\n#if PG_VERSION_NUM >= 160000\n#define FUNCTION_PREFIX\n#else\n#define FUNCTION_PREFIX PGDLLEXPORT\n#endif\n\n#endif\n\n#ifdef __cplusplus\n}\n#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef VECTOR_H
+#define VECTOR_H
+
+#include <stddef.h>
+
+#define VECTOR_MAX_DIM 16000
+
+// Define a layout struct for C and for offsetof in C++
+struct VectorLayout {
+int32vl_len_;
+int16dim;
+int16unused;
+floatx[FLEXIBLE_ARRAY_MEMBER];
+};
+
+#define VECTOR_SIZE(_dim) (offsetof(VectorLayout, x) + sizeof(float)*(_dim))
+
+#ifdef __cplusplus
+class Vector {
+int32vl_len_;
+int16dim;
+int16unused;
+floatx[FLEXIBLE_ARRAY_MEMBER];
+
+public:
+static Vector *Init(int dim);
+voidPrint(char *msg);
+intCmp(Vector * b);
+
+int16 get_dim() const { return dim; }
+int16 get_unused() const { return unused; }
+float *get_x() { return x; }
+const float *get_x() const { return x; }
+};
+#else
+#define Vector VectorLayout
+#endif
+
+#define DatumGetVector(x)((Vector *) PG_DETOAST_DATUM(x))
+#define PG_GETARG_VECTOR_P(x)DatumGetVector(PG_GETARG_DATUM(x))
+#define PG_RETURN_VECTOR_P(x)PG_RETURN_POINTER(x)
+
+/* TODO Move to better place */
+#if PG_VERSION_NUM >= 160000
+#define FUNCTION_PREFIX
+#else
+#define FUNCTION_PREFIX PGDLLEXPORT
+#endif
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
