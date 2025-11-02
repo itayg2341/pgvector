@@ -1,21 +1,12 @@
 #ifdef __cplusplus
-#include "postgres.h"
 extern "C" {
 #endif
 
 #ifndef SPARSEVEC_H
 #define SPARSEVEC_H
 
-#ifdef __cplusplus
-constexpr int32 SPARSEVEC_MAX_DIM = 1000000000;
-#else
 #define SPARSEVEC_MAX_DIM 1000000000
-#endif
-#ifdef __cplusplus
-constexpr int32 SPARSEVEC_MAX_NNZ = 16000;
-#else
 #define SPARSEVEC_MAX_NNZ 16000
-#endif
 
 #define DatumGetSparseVector(x)		((SparseVector *) PG_DETOAST_DATUM(x))
 #define PG_GETARG_SPARSEVEC_P(x)	DatumGetSparseVector(PG_GETARG_DATUM(x))

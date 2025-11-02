@@ -8,7 +8,6 @@ extern "C" {
 #define __STDC_WANT_IEC_60559_TYPES_EXT__
 
 #include "postgres.h"
-#include "postgres.h"
 #include <float.h>
 
 /* We use two types of dispatching: intrinsics and target_clones */
@@ -59,11 +58,7 @@ extern "C" {
 #ifdef __cplusplus
 constexpr int16 HALFVEC_MAX_DIM = 16000;
 #else
-#ifdef __cplusplus
-constexpr int16 HALFVEC_MAX_DIM = 16000;
-#else
 #define HALFVEC_MAX_DIM 16000
-#endif
 #endif
 
 typedef struct HalfVector
