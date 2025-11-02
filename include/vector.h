@@ -30,7 +30,7 @@ floatx[FLEXIBLE_ARRAY_MEMBER];
 
 public:
 static Vector *Init(int dim);
-void Print(const std::string &msg);
+void Print(const std::string void Print(const std::string &msg);msg) const;
 intCmp(Vector * b);
 
 int16 get_dim() const { return dim; }

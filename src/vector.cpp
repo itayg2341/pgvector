@@ -307,7 +307,7 @@ vector_out(PG_FUNCTION_ARGS)
 /*
  * Print vector - useful for debugging
  */
-void Vector::Print(char *msg)
+void Vector::Print(const std::string &msg) const
 {
 	char	   *out = DatumGetPointer(DirectFunctionCall1(vector_out, PointerGetDatum(this)));
 
@@ -961,7 +961,7 @@ subvector(PG_FUNCTION_ARGS)
 /*
  * Internal helper to compare vectors
  */
-int Vector::Cmp(Vector *b)
+int Vector::Cmp(const Vector *b) const
 {
 	int			dim = Min(this->dim, b->dim);
 
