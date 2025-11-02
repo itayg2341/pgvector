@@ -309,9 +309,9 @@ vector_out(PG_FUNCTION_ARGS)
  */
 void Vector::Print(char *msg)
 {
-	char	   *out = DatumGetPointer(DirectFunctionCall1(vector_out, PointerGetDatum(vector)));
+	char	   *out = DatumGetPointer(DirectFunctionCall1(vector_out, PointerGetDatum(this)));
 
-	elog(INFO, "%s = %s", msg, out);
+	elog(INFO, "%s = %s", msg.c_str(), out);
 	pfree(out);
 }
 
