@@ -1,4 +1,5 @@
 #ifdef __cplusplus
+#include <string>
 extern "C" {
 #endif
 
@@ -29,7 +30,7 @@ floatx[FLEXIBLE_ARRAY_MEMBER];
 
 public:
 static Vector *Init(int dim);
-voidPrint(char *msg);
+void Print(const std::string &msg);
 intCmp(Vector * b);
 
 int16 get_dim() const { return dim; }
