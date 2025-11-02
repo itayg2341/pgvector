@@ -15,15 +15,13 @@ int32vl_len_;
 int16dim;
 int16unused;
 floatx[FLEXIBLE_ARRAY_MEMBER];
-    Vector *operator+(const Vector &other) const;\
-    Vector *operator-(const Vector &other) const;\
-    float operator*(const Vector &other) const;
 };
 
 #define VECTOR_SIZE(_dim) (offsetof(VectorLayout, x) + sizeof(float)*(_dim))
 
 #ifdef __cplusplus
 class Vector {
+private:
 int32vl_len_;
 int16dim;
 int16unused;
@@ -38,8 +36,13 @@ int16 get_dim() const { return dim; }
 int16 get_unused() const { return unused; }
 float *get_x() { return x; }
 const float *get_x() const { return x; }
-    Vector *operator+(const Vector &other) const;\
-    Vector *operator-(const Vector &other) const;\
+
+    float L2SquaredDistance(const Vector &other) const;
+    double CosineSimilarity(const Vector &other) const;
+    float L1Distance(const Vector &other) const;
+
+    Vector *operator+(const Vector &other) const;
+    Vector *operator-(const Vector &other) const;
     float operator*(const Vector &other) const;
 };
 #else
